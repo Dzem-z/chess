@@ -26,11 +26,14 @@ class chessGame{
         sf::Sprite* piecesSprites[64];
         const bool SFMLSupport[2];
         bool turn;
+        bool clearChecks() const;   //used for resetting check counter
+        int clearGlobalMoveBoards();
+        int clearAllBindArraysAndBindings();
         friend class chessPlayer;
     protected:
         
     public:
-        int processAll();
+        int processAll(bool marking); //processes moves of all pieces, marking - when true function tells pieces to mark informational values, not doing it otherwise
         chessGame(chessPlayer* whitePlayer, chessPlayer* blackPlayer, bool whiteSFMLProcessingSupport,
                     bool blackSFMLProcessingSupport, sf::Sprite** sprites);
         int start();
@@ -73,6 +76,8 @@ class humanPlayer : public chessPlayer{
 };
 
 class chessPiece {
+        friend class chessPlayer;
+        friend class chessGame;
     private:
         chessPiece*** const globalChessboard;   //2d global chessboard array of chesspiece object pointers
         int** const globalBoard;         //pointer to 2d array on which all pieces are saved
@@ -84,25 +89,27 @@ class chessPiece {
         int** const friendGlobalMoveBoard; //pointer to 2d array on which ally moves and bindings are saved
         int** const hostileGlobalMoveBoard;  //pointer to 2d array on which hostile moves and possible new bindings are saved                   
         int* bindArray[8]; //2d array for for on which can move binded piece
-        
+        bool markingVar; //boolean variable telling the object to set or not informational values
     protected:
+        bool setMarking(bool marking); //sets marking value specified in signature, returns previus marking value
         chessPiece** const kings;    /*pointer to kings array 
                                         0 points to allied king 
                                             1 to hostile king*/
         bool attackWithoutMove(sf::Vector2i field);
         int movePiece(sf::Vector2i destination);
-        int clearGlobalMoveBoards();
+        int clearBindArray();
         int clearMoveBoard();
         chessPiece* getPiece(sf::Vector2i pos);
         int bind(chessPiece* piece) const;
         virtual int setCheck();
         virtual int setCheck(sf::Vector2i pos);
         virtual int unsetCheck();
-        virtual int linearMovement(sf::Vector2i shift);
+        virtual int linearMovement(sf::Vector2i shift, bool check); //method designed for doing all kinds of stuff connected to linear movement of piece
         int checkFieldForFigure(sf::Vector2i attackedField);
         bool possibleMove(sf::Vector2i designatedField);
         bool attackField(sf::Vector2i attackedField);
         bool setBindingOnField(sf::Vector2i designatedField);   //sets POSSIBLE_BINDING on field, marking the field as to be covered
+        int unbind();  //zeroes bind flag
     public:
         int* moveArray[8];  //2d array specifying valid fields to which piece can move
         int getMoveCount() const;
@@ -113,7 +120,7 @@ class chessPiece {
         int getColour() const;
         bool isBinded() const;
         virtual int whatIs() const = 0;
-        virtual int process() = 0;
+        virtual int process(bool marking) = 0;
         virtual int isCheck() const;
         friend int bindField(chessPiece* piece, sf::Vector2i field);
         friend class chessPlayer;
@@ -128,7 +135,7 @@ class pawn : public chessPiece{
         pawn(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
             chessPiece** kingsArray, int Xposition, int Yposition, int color, int orientation);
         int whatIs() const;
-        int process();
+        int process(bool marking);
 
 };
 
@@ -138,11 +145,12 @@ class rook : public chessPiece{
                                     //0 - left
                                     //1 - right
                                     //2 - undefined
+        
     public:
         rook(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
             chessPiece** kingsArray, int Xposition, int Yposition, int color);
         int whatIs() const;
-        int process();
+        int process(bool marking);
 
 };
 
@@ -154,7 +162,7 @@ class knight : public chessPiece{
         knight(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
         int whatIs() const { return 0;};
-        int process(){return 0;};
+        int process(bool marking){return 0;};
 };
 
 //to do
@@ -163,7 +171,7 @@ class bishop : public chessPiece{
         bishop(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
         int whatIs() const { return 0;};
-        int process(){return 0;};
+        int process(bool marking){return 0;};
 };
 
 //to do
@@ -172,7 +180,7 @@ class queen : public chessPiece{
         queen(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
         int whatIs() const { return 0;};
-        int process(){return 0;};
+        int process(bool marking){return 0;};
 };
 
 //in progress
@@ -188,7 +196,7 @@ class king : public chessPiece{
         int setCheck();
         int setCheck(sf::Vector2i checkingPiece);    //passes position from check is coming( used onli for pieces with linearmovement scheme)
         int unsetCheck();
-        int process();
+        int process(bool marking);
         sf::Vector2i getCheckingPiecePosition();    //returns checkingPiece
         int isCheck() const;
 };

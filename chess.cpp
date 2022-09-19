@@ -46,11 +46,11 @@ chessGame::chessGame(chessPlayer* whitePlayer,  //pointer to instance representi
     globalBoard[ 7 ][ 0 ] = WHITE_ROOK;
     globalBoard[ 4 ][ 0 ] = WHITE_KING;
 
-    for(int i = 0; i < 8; i++)
-        globalBoard[ i ][ 1 ] = WHITE_PAWN;
+    //for(int i = 0; i < 8; i++)
+    //    globalBoard[ i ][ 1 ] = WHITE_PAWN;
     
-    for(int i = 0; i < 8; i++)
-        globalBoard[ i ][ 6 ] = BLACK_PAWN;
+    //for(int i = 0; i < 8; i++)
+    //    globalBoard[ i ][ 6 ] = BLACK_PAWN;
 
     globalBoard[ 7 ][ 7 ] = BLACK_ROOK;
     globalBoard[ 0 ][ 7 ] = BLACK_ROOK;
@@ -142,7 +142,7 @@ chessGame::chessGame(chessPlayer* whitePlayer,  //pointer to instance representi
 int chessGame::start(){ //starts the game with white move
     turn = WHITE_TURN_I;
     isStarted = true;
-    processAll();
+    processAll(1);
     if( !SFMLSupport[ turn ])
         turn = players[ WHITE_TURN_I ]->processMove(sf::Vector2i(-1,-1));   //blank value
     return turn != WHITE_TURN_I;
@@ -174,14 +174,45 @@ int chessGame::move(){  //processes all action required to make move and switch 
 
 }
 
-int chessGame::processAll(){
+bool chessGame::clearChecks() const{
+    king* p = (king*)BlackKingsArray[ 0 ];
+    while( p->isCheck() )
+        p->unsetCheck();
+    p = (king*)WhiteKingsArray[ 0 ];
+    while( p->isCheck())
+        p->unsetCheck();
+    return true;
+}
+
+int chessGame::clearGlobalMoveBoards(){    //sets all fields in global movement boards to FREE_FIELD
+    for(int x = 0; x < 8; x++)
+        for(int y = 0; y < 8; y++){
+            WhiteMoveBoard[ x ][ y ] = FREE_FIELD;
+            BlackMoveBoard[ x ][ y ] = FREE_FIELD;
+        }
+    return 0;
+}
+
+int chessGame::clearAllBindArraysAndBindings(){
+    for(int x = 0; x < 8; x++)
+        for(int y = 0; y < 8; y++){
+            if(globalBoard[ x ][ y ] >= HOSTILE_BASE ){
+                globalChessboard[ x ][ y ]->clearBindArray();
+                globalChessboard[ x ][ y ]->unbind();
+            }
+        }
+    return 0;
+}
+
+
+int chessGame::processAll(bool marking){  //when true function tells pieces to mark informational values, not doing it otherwise
     //if game not started, abort
     if(!isStarted)
         throw("game not started");
     for(int x = 0; x < 8; x++){
         for(int y = 0; y < 8; y++)
             if(globalBoard[ x ][ y ] > FREE)
-                globalChessboard[ x ][ y ]->process();
+                globalChessboard[ x ][ y ]->process(marking);
     }
     return 0;
 }
@@ -216,8 +247,11 @@ int chessPlayer::getColour() const{
 }
 
 int chessPlayer::endTurn(){ //all action needed for ending(switching) turn
-    game->processAll();
-    game->processAll();
+    //game->clearChecks();
+    game->clearGlobalMoveBoards();
+    game->clearAllBindArraysAndBindings();
+    game->processAll(1);
+    game->processAll(0);
     return !getSide();
 }
 
@@ -328,9 +362,17 @@ chessPiece::chessPiece( //constructor
         moveArray[ i ] = new int[ 8 ];
         bindArray[ i ] = new int[ 8 ];
     }
-    for(int i = 0; i < 64; i++)
+    for(int i = 0; i < 64; i++){
         moveArray[ i % 8 ][ i / 8 ] = UNDEFINED_FIELD;
+        bindArray[ i % 8 ][ i / 8 ] = INVALID_FIELD;
+    }
     
+}
+
+bool chessPiece::setMarking(bool marking){
+    bool temp = markingVar;
+    markingVar = marking;
+    return temp;
 }
 
 int chessPiece::getMoveCount() const{   //returns value corresponding to number of moves
@@ -370,10 +412,16 @@ int chessPiece::bind(chessPiece* piece) const{
     return 0;
 }
 
-int chessPiece::linearMovement(sf::Vector2i shift){
+int chessPiece::unbind(){
+    binded = false;
+    return 0;
+}
+
+int chessPiece::linearMovement(sf::Vector2i shift, bool check){
     sf::Vector2i attack = getPosition() + shift;
     while(checkFieldForFigure(attack) < HOSTILE_PAWN){
-        attackField(attack);
+        if(!check || checkFieldForFigure(attack) == POSSIBLE_BINDING)
+            attackField(attack);
         attack += shift;
     }
     if(checkFieldForFigure(attack) != OUTSIDE_THE_CHESSBOARD_FIELD)
@@ -385,7 +433,6 @@ int chessPiece::linearMovement(sf::Vector2i shift){
             setBindingOnField(attack);
             attack += shift;
         }
-        setCheck(getPosition());
     }
         
     else if(checkFieldForFigure(attack) < HOSTILE_KING){
@@ -397,7 +444,7 @@ int chessPiece::linearMovement(sf::Vector2i shift){
         if(checkFieldForFigure(attack) == HOSTILE_KING){
             attack = getPosition();
             bind(binded);
-            while(checkFieldForFigure(attack) < HOSTILE_PAWN){
+            while(checkFieldForFigure(attack) != HOSTILE_KING){
                 bindField(binded, attack);
                 attack += shift;
             }
@@ -432,14 +479,13 @@ int chessPiece::clearMoveBoard(){   //sets all fields in moveArray to INVALID_FI
     return 0;
 }
 
-int chessPiece::clearGlobalMoveBoards(){    //sets all fields in global movement boards to FREE_FIELD
+int chessPiece::clearBindArray(){
     for(int x = 0; x < 8; x++)
-        for(int y = 0; y < 8; y++){
-            friendGlobalMoveBoard[ x ][ y ] = FREE_FIELD;
-            hostileGlobalMoveBoard[ x ][ y ] = FREE_FIELD;
-        }
+        for(int y = 0; y < 8; y++)
+            bindArray[ x ][ y ] = INVALID_FIELD;
     return 0;
 }
+
 
 int chessPiece::movePiece(  //applies all action essential for doing move to engine
                             sf::Vector2i destination    //field to which piece is moving
@@ -453,7 +499,6 @@ int chessPiece::movePiece(  //applies all action essential for doing move to eng
     pos = destination;
     binded = false;
     moveCount++;
-    clearGlobalMoveBoards();
     return 0;
 }
 
@@ -469,24 +514,29 @@ bool chessPiece::possibleMove(sf::Vector2i designatedField){    //processing rel
 bool chessPiece::attackField(sf::Vector2i attackedField){    //processing related to possible attack movement
     if(!isBinded() || bindArray[ attackedField.x ][ attackedField.y ] == BINDED)
         possibleMove(attackedField);
-    if( friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] != POSSIBLE_BINDING)
-        friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] = ATTACKED_BY_HOSTILE_FIELD;
-    if( checkFieldForFigure(attackedField) == HOSTILE_KING)
-        setCheck();
+    if(markingVar){
+        if( friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] != POSSIBLE_BINDING)
+            friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] = ATTACKED_BY_HOSTILE_FIELD;
+        if( checkFieldForFigure(attackedField) == HOSTILE_KING)
+            setCheck(pos);
+    }
     /////
     return true;
 }
 
 bool chessPiece::attackWithoutMove(sf::Vector2i attackedField){
-    if( friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] != POSSIBLE_BINDING)
-        friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] = ATTACKED_BY_HOSTILE_FIELD;
-    if( checkFieldForFigure(attackedField) == HOSTILE_KING)
-        setCheck();
+    if(markingVar){
+        if( friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] != POSSIBLE_BINDING)
+            friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] = ATTACKED_BY_HOSTILE_FIELD;
+        if( checkFieldForFigure(attackedField) == HOSTILE_KING)
+            setCheck(pos);
+    }
     return true;
 }
 
 bool chessPiece::setBindingOnField(sf::Vector2i designatedField){   //sets POSSIBLE_BINDING on field, marking the field as to be covered
-    friendGlobalMoveBoard[ designatedField.x ][ designatedField.y ] = POSSIBLE_BINDING;
+    if(markingVar)
+        friendGlobalMoveBoard[ designatedField.x ][ designatedField.y ] = POSSIBLE_BINDING;
     return true;
 }
 
@@ -516,8 +566,9 @@ int pawn::whatIs() const{   //returns integer identifier of piece
     return  PAWN;
 }
 
-int pawn::process(){    //proceses pawns move, marks fields on which it can step, sets cheks and bindings
+int pawn::process(bool marking){    //proceses pawns move, marks fields on which it can step, sets cheks and bindings
     clearMoveBoard();
+    setMarking(marking);
     switch(isCheck()){
         case NO_CHECK:{
             sf::Vector2i position = getPosition();
@@ -544,7 +595,7 @@ int pawn::process(){    //proceses pawns move, marks fields on which it can step
                 attackWithoutMove(position);
         }
         break;
-        case CHECK:{//in progress
+        case CHECK:{
             sf::Vector2i position = getPosition();
             position.y += orientation;
             
@@ -559,7 +610,11 @@ int pawn::process(){    //proceses pawns move, marks fields on which it can step
                 }
             }
 
-            //if(kings[ 1 ])
+            if(((king*)kings[ 1 ])->getCheckingPiecePosition() == (position + sf::Vector2i(-1, 0)))
+                attackField(position + sf::Vector2i(-1, 0));
+            if(((king*)kings[ 1 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
+                attackField(position + sf::Vector2i(1, 0));
+                
         }
         break;
         case DOUBLE_CHECK:
@@ -586,17 +641,16 @@ int rook::whatIs() const{   //returns integer identifier of piece
     return ROOK;
 }
 
-int rook::process(){      //proceses rooks move, marks fields on which it can step, sets cheks and bindings
+int rook::process(bool marking){      //proceses rooks move, marks fields on which it can step, sets cheks and bindings
     clearMoveBoard();
+    setMarking(marking);
     switch(isCheck()){
         case NO_CHECK:
-            linearMovement(sf::Vector2i(1, 0));
-            linearMovement(sf::Vector2i(-1, 0));
-            linearMovement(sf::Vector2i(0, 1));
-            linearMovement(sf::Vector2i(0, -1));
-        break;
         case CHECK:
-            
+            linearMovement(sf::Vector2i(1, 0), isCheck());
+            linearMovement(sf::Vector2i(-1, 0), isCheck());
+            linearMovement(sf::Vector2i(0, 1), isCheck());
+            linearMovement(sf::Vector2i(0, -1), isCheck());  
         break;
         case DOUBLE_CHECK:
 
@@ -680,10 +734,11 @@ sf::Vector2i king::getCheckingPiecePosition(){
     return checkingPiece;
 }
 
-int king::process(){
+int king::process(bool marking){
     sf::Vector2i position2 = getPosition();
     int result = 0;
     clearMoveBoard();
+    setMarking(marking);
     switch(check){
         case NO_CHECK:
             if( getMoveCount() == 0 && 
