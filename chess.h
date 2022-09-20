@@ -95,7 +95,7 @@ class chessPiece {
         chessPiece** const kings;    /*pointer to kings array 
                                         0 points to allied king 
                                             1 to hostile king*/
-        bool attackWithoutMove(sf::Vector2i field);
+        bool markFieldAsAttacked(sf::Vector2i field);
         int movePiece(sf::Vector2i destination);
         int clearBindArray();
         int clearMoveBoard();

@@ -46,11 +46,11 @@ chessGame::chessGame(chessPlayer* whitePlayer,  //pointer to instance representi
     globalBoard[ 7 ][ 0 ] = WHITE_ROOK;
     globalBoard[ 4 ][ 0 ] = WHITE_KING;
 
-    //for(int i = 0; i < 8; i++)
-    //    globalBoard[ i ][ 1 ] = WHITE_PAWN;
+    for(int i = 0; i < 8; i++)
+        globalBoard[ i ][ 1 ] = WHITE_PAWN;
     
-    //for(int i = 0; i < 8; i++)
-    //    globalBoard[ i ][ 6 ] = BLACK_PAWN;
+    for(int i = 0; i < 8; i++)
+        globalBoard[ i ][ 6 ] = BLACK_PAWN;
 
     globalBoard[ 7 ][ 7 ] = BLACK_ROOK;
     globalBoard[ 0 ][ 7 ] = BLACK_ROOK;
@@ -247,7 +247,7 @@ int chessPlayer::getColour() const{
 }
 
 int chessPlayer::endTurn(){ //all action needed for ending(switching) turn
-    //game->clearChecks();
+    game->clearChecks();
     game->clearGlobalMoveBoards();
     game->clearAllBindArraysAndBindings();
     game->processAll(1);
@@ -420,12 +420,10 @@ int chessPiece::unbind(){
 int chessPiece::linearMovement(sf::Vector2i shift, bool check){
     sf::Vector2i attack = getPosition() + shift;
     while(checkFieldForFigure(attack) < HOSTILE_PAWN){
-        if(!check || checkFieldForFigure(attack) == POSSIBLE_BINDING)
-            attackField(attack);
+        attackField(attack);
         attack += shift;
     }
-    if(checkFieldForFigure(attack) != OUTSIDE_THE_CHESSBOARD_FIELD)
-        attackWithoutMove(attack);
+    attackField(attack);
     if(checkFieldForFigure(attack) == HOSTILE_KING){    //if hostile king is under attack then sets check 
         //and sets POSSIBLE_BINDING state on all fields that can be covered
         attack = getPosition() + shift;
@@ -511,7 +509,7 @@ bool chessPiece::possibleMove(sf::Vector2i designatedField){    //processing rel
     return true;
 }
 
-bool chessPiece::attackField(sf::Vector2i attackedField){    //processing related to possible attack movement
+/*bool chessPiece::attackField(sf::Vector2i attackedField){    //processing related to possible attack movement
     if(!isBinded() || bindArray[ attackedField.x ][ attackedField.y ] == BINDED)
         possibleMove(attackedField);
     if(markingVar){
@@ -522,14 +520,27 @@ bool chessPiece::attackField(sf::Vector2i attackedField){    //processing relate
     }
     /////
     return true;
+}*/
+
+
+bool chessPiece::attackField(sf::Vector2i attackedField){
+    if((!isBinded() || bindArray[ attackedField.x ][ attackedField.y ] == BINDED) &&
+                (!isCheck() || checkFieldForFigure(attackedField) == POSSIBLE_BINDING || ((king*)kings[ 0 ])->getCheckingPiecePosition() == attackedField) &&
+                 checkFieldForFigure(attackedField) < FRIENDLY_BASE)
+        possibleMove(attackedField);
+    markFieldAsAttacked(attackedField);
+    return true;
 }
 
-bool chessPiece::attackWithoutMove(sf::Vector2i attackedField){
-    if(markingVar){
-        if( friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] != POSSIBLE_BINDING)
-            friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] = ATTACKED_BY_HOSTILE_FIELD;
-        if( checkFieldForFigure(attackedField) == HOSTILE_KING)
-            setCheck(pos);
+
+bool chessPiece::markFieldAsAttacked(sf::Vector2i attackedField){
+    if(checkFieldForFigure(attackedField) != OUTSIDE_THE_CHESSBOARD_FIELD){
+        if(markingVar){
+            if( friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] != POSSIBLE_BINDING)
+                friendGlobalMoveBoard[ attackedField.x ][ attackedField.y ] = ATTACKED_BY_HOSTILE_FIELD;
+            if( checkFieldForFigure(attackedField) == HOSTILE_KING)
+                setCheck(pos);
+        }
     }
     return true;
 }
@@ -587,12 +598,12 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
             if(checkFieldForFigure(position) < FRIENDLY_BASE && checkFieldForFigure(position) >= HOSTILE_BASE)
                 attackField(position);
             else if( checkFieldForFigure(position) != OUTSIDE_THE_CHESSBOARD_FIELD)
-                attackWithoutMove(position);
+                markFieldAsAttacked(position);
             position.x += 2;
             if(checkFieldForFigure(position) < FRIENDLY_BASE && checkFieldForFigure(position) >= HOSTILE_BASE)
                 attackField(position);
             else if( checkFieldForFigure(position) != OUTSIDE_THE_CHESSBOARD_FIELD)
-                attackWithoutMove(position);
+                markFieldAsAttacked(position);
         }
         break;
         case CHECK:{
@@ -610,9 +621,9 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
                 }
             }
 
-            if(((king*)kings[ 1 ])->getCheckingPiecePosition() == (position + sf::Vector2i(-1, 0)))
+            if(((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(-1, 0)))
                 attackField(position + sf::Vector2i(-1, 0));
-            if(((king*)kings[ 1 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
+            if(((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
                 attackField(position + sf::Vector2i(1, 0));
                 
         }
