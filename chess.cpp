@@ -45,6 +45,11 @@ chessGame::chessGame(chessPlayer* whitePlayer,  //pointer to instance representi
     globalBoard[ 0 ][ 0 ] = WHITE_ROOK;
     globalBoard[ 7 ][ 0 ] = WHITE_ROOK;
     globalBoard[ 4 ][ 0 ] = WHITE_KING;
+    globalBoard[ 1 ][ 0 ] = WHITE_KNIGHT;
+    globalBoard[ 6 ][ 0 ] = WHITE_KNIGHT;
+    globalBoard[ 2 ][ 0 ] = WHITE_BISHOP;
+    globalBoard[ 5 ][ 0 ] = WHITE_BISHOP;
+    globalBoard[ 3 ][ 0 ] = WHITE_QUEEN;
 
     for(int i = 0; i < 8; i++)
         globalBoard[ i ][ 1 ] = WHITE_PAWN;
@@ -55,6 +60,11 @@ chessGame::chessGame(chessPlayer* whitePlayer,  //pointer to instance representi
     globalBoard[ 7 ][ 7 ] = BLACK_ROOK;
     globalBoard[ 0 ][ 7 ] = BLACK_ROOK;
     globalBoard[ 4 ][ 7 ] = BLACK_KING;
+    globalBoard[ 6 ][ 7 ] = BLACK_KNIGHT;
+    globalBoard[ 1 ][ 7 ] = BLACK_KNIGHT;
+    globalBoard[ 2 ][ 7 ] = BLACK_BISHOP;
+    globalBoard[ 5 ][ 7 ] = BLACK_BISHOP;
+    globalBoard[ 3 ][ 7 ] = BLACK_QUEEN;
     //end
 
     WhiteKingsArray = new chessPiece*[ 2 ];
@@ -505,7 +515,8 @@ chessPiece* chessPiece::getPiece(sf::Vector2i pos){ //returns pointer to piece l
 } 
 
 bool chessPiece::possibleMove(sf::Vector2i designatedField){    //processing related to possible move
-    moveArray[ designatedField.x ][ designatedField.y ] = POSSIBLE_MOVE;
+    if(!isBinded() || bindArray[ designatedField.x ][ designatedField.y ] == BINDED)
+        moveArray[ designatedField.x ][ designatedField.y ] = POSSIBLE_MOVE;
     return true;
 }
 
@@ -525,7 +536,7 @@ bool chessPiece::possibleMove(sf::Vector2i designatedField){    //processing rel
 
 bool chessPiece::attackField(sf::Vector2i attackedField){
     if((!isBinded() || bindArray[ attackedField.x ][ attackedField.y ] == BINDED) &&
-                (!isCheck() || checkFieldForFigure(attackedField) == POSSIBLE_BINDING || ((king*)kings[ 0 ])->getCheckingPiecePosition() == attackedField) &&
+                (!isCheck() || whatIs() == KING || checkFieldForFigure(attackedField) == POSSIBLE_BINDING || ((king*)kings[ 0 ])->getCheckingPiecePosition() == attackedField) &&
                  checkFieldForFigure(attackedField) < FRIENDLY_BASE)
         possibleMove(attackedField);
     markFieldAsAttacked(attackedField);
@@ -682,6 +693,33 @@ knight::knight(         //knight constructor
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
                                  kingsArray, Xposition, Yposition, color){}
 
+int knight::whatIs() const{
+    return KNIGHT;
+}
+
+int knight::process(bool marking){
+    clearMoveBoard();
+    setMarking(marking);
+    sf::Vector2i position = getPosition();
+    switch(isCheck()){
+        case NO_CHECK:
+        case CHECK:
+            attackField(position + sf::Vector2i(2,1));
+            attackField(position + sf::Vector2i(1,2));
+            attackField(position + sf::Vector2i(-1,2));
+            attackField(position + sf::Vector2i(-2,1));
+            attackField(position + sf::Vector2i(-2,-1));
+            attackField(position + sf::Vector2i(-1,-2));
+            attackField(position + sf::Vector2i(1,-2));
+            attackField(position + sf::Vector2i(2,-1));
+        break;
+        case DOUBLE_CHECK:
+
+        break;
+    }
+    return 0;
+}
+
 bishop::bishop(         //bishop constructor
             int** globalMoveBoard,         //pointer to array on which all moves and pieces are saved
             int** hostileMoves,       //pointer to array on which hostile moves and bindings are saved
@@ -694,6 +732,29 @@ bishop::bishop(         //bishop constructor
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
                                  kingsArray, Xposition, Yposition, color){}
 
+int bishop::whatIs() const{
+    return BISHOP;
+}
+
+int bishop::process(bool marking){
+    clearMoveBoard();
+    setMarking(marking);
+    sf::Vector2i position = getPosition();
+    switch(isCheck()){
+        case NO_CHECK:
+        case CHECK:
+            linearMovement(sf::Vector2i(1,1),isCheck());
+            linearMovement(sf::Vector2i(1,-1),isCheck());
+            linearMovement(sf::Vector2i(-1,-1),isCheck());
+            linearMovement(sf::Vector2i(-1,1),isCheck());
+        break;
+        case DOUBLE_CHECK:
+
+        break;
+    }
+    return 0;
+}
+
 queen::queen(         //queen constructor
             int** globalMoveBoard,         //pointer to array on which all moves and pieces are saved
             int** hostileMoves,       //pointer to array on which hostile moves and bindings are saved
@@ -705,6 +766,35 @@ queen::queen(         //queen constructor
             int color                  //colour of the piece   
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
                                  kingsArray, Xposition, Yposition, color){}
+
+int queen::whatIs() const{
+    return QUEEN;
+}
+
+int queen::process(bool marking){
+    clearMoveBoard();
+    setMarking(marking);
+    sf::Vector2i position = getPosition();
+    switch(isCheck()){
+        case NO_CHECK:
+        case CHECK:
+            //diagonal
+            linearMovement(sf::Vector2i(1,1),isCheck());
+            linearMovement(sf::Vector2i(1,-1),isCheck());
+            linearMovement(sf::Vector2i(-1,-1),isCheck());
+            linearMovement(sf::Vector2i(-1,1),isCheck());
+            //straight
+            linearMovement(sf::Vector2i(1, 0), isCheck());
+            linearMovement(sf::Vector2i(-1, 0), isCheck());
+            linearMovement(sf::Vector2i(0, 1), isCheck());
+            linearMovement(sf::Vector2i(0, -1), isCheck()); 
+        break;
+        case DOUBLE_CHECK:
+
+        break;
+    }
+    return 0;
+}
 
 king::king(         //king constructor
             int** globalMoveBoard,         //pointer to array on which all moves and pieces are saved
@@ -765,6 +855,7 @@ int king::process(bool marking){
                 checkFieldForFigure(getPosition() + sf::Vector2i(1, 0)) == FREE_FIELD &&
                 getPiece(getPosition() + sf::Vector2i(3, 0))->getMoveCount() == 0)
                     possibleCastling(RIGHT);
+        case CHECK:
             position2.x -= 1;
             result = checkFieldForFigure(position2);
             if(result == FREE_FIELD || (result >= HOSTILE_BASE && result < FRIENDLY_BASE))
@@ -797,9 +888,6 @@ int king::process(bool marking){
             result = checkFieldForFigure(position2);
             if(result == FREE_FIELD || (result >= HOSTILE_BASE && result < FRIENDLY_BASE))
                 attackField(position2);
-
-        break;
-        case CHECK:
 
         break;
         case DOUBLE_CHECK:

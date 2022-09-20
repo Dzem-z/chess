@@ -156,22 +156,22 @@ class rook : public chessPiece{
 
 int bindField(chessPiece* piece, sf::Vector2i field);
 
-//to do
+
 class knight : public chessPiece{
     public:
         knight(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
-        int whatIs() const { return 0;};
-        int process(bool marking){return 0;};
+        int whatIs() const;
+        int process(bool marking);
 };
 
-//to do
+//in progress
 class bishop : public chessPiece{
     public:
         bishop(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
-        int whatIs() const { return 0;};
-        int process(bool marking){return 0;};
+        int whatIs() const;
+        int process(bool marking);
 };
 
 //to do
@@ -179,11 +179,11 @@ class queen : public chessPiece{
     public:
         queen(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
-        int whatIs() const { return 0;};
-        int process(bool marking){return 0;};
+        int whatIs() const;
+        int process(bool marking);
 };
 
-//in progress
+
 class king : public chessPiece{
     private:
         int check;  //check counter 0 - no check, 1 - single check, 2 - double check
@@ -194,7 +194,7 @@ class king : public chessPiece{
                 chessPiece** kingsArray, int Xposition, int Yposition, int color);
         int whatIs() const;
         int setCheck();
-        int setCheck(sf::Vector2i checkingPiece);    //passes position from check is coming( used onli for pieces with linearmovement scheme)
+        int setCheck(sf::Vector2i checkingPiece);    //passes position from check is coming( used only for pieces with linearmovement scheme)
         int unsetCheck();
         int process(bool marking);
         sf::Vector2i getCheckingPiecePosition();    //returns checkingPiece
