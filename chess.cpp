@@ -447,7 +447,7 @@ int chessPiece::linearMovement(sf::Vector2i shift, bool check){
         attackField(attack);
         chessPiece* binded = getPiece(attack);
         attack += shift;
-        while(checkFieldForFigure(attack) < HOSTILE_KING)
+        while(checkFieldForFigure(attack) < HOSTILE_BASE)
             attack += shift;
         if(checkFieldForFigure(attack) == HOSTILE_KING){
             attack = getPosition();
@@ -502,10 +502,6 @@ sf::Sprite* chessPiece::getSprite(){
 int chessPiece::movePiece(  //applies all action essential for doing move to engine
                             sf::Vector2i destination    //field to which piece is moving
                             ){
-    if(globalBoard[ destination.x ][ destination.y ] > FREE){
-        ShowSprite(globalChessboard[ destination.x ][ destination.y ]->getSprite(), HIDE);
-    }
-
 
 
 
@@ -546,7 +542,7 @@ bool chessPiece::possibleMove(sf::Vector2i designatedField){    //processing rel
 
 
 bool chessPiece::attackField(sf::Vector2i attackedField){
-    if((!isBinded() || bindArray[ attackedField.x ][ attackedField.y ] == BINDED) &&
+    if(checkFieldForFigure(attackedField) != OUTSIDE_THE_CHESSBOARD_FIELD && (!isBinded() || bindArray[ attackedField.x ][ attackedField.y ] == BINDED) &&
                 (!isCheck() || whatIs() == KING || checkFieldForFigure(attackedField) == POSSIBLE_BINDING || ((king*)kings[ 0 ])->getCheckingPiecePosition() == attackedField) &&
                  checkFieldForFigure(attackedField) < FRIENDLY_BASE)
         possibleMove(attackedField);
@@ -571,6 +567,16 @@ bool chessPiece::setBindingOnField(sf::Vector2i designatedField){   //sets POSSI
     if(markingVar)
         friendGlobalMoveBoard[ designatedField.x ][ designatedField.y ] = POSSIBLE_BINDING;
     return true;
+}
+
+chessPiece::~chessPiece(){
+    globalChessboard[ getPosition().x ][ getPosition().y ] = nullptr;
+    globalBoard[ getPosition().x ][ getPosition().y ] = FREE;
+    ShowSprite(sprite, HIDE);
+    for(int i = 0; i < 8; i++){
+        delete[] moveArray[ i ];
+        delete[] bindArray[ i ];
+    }
 }
 
 int bindField(chessPiece* piece, sf::Vector2i field){
@@ -600,9 +606,13 @@ int pawn::whatIs() const{   //returns integer identifier of piece
     return  PAWN;
 }
 
-//int pawn::movePiece(sf::Vector2i destination){
-//    return 0;
-//}
+int pawn::movePiece(sf::Vector2i destination){
+    sf::Vector2i attacked = destination - sf::Vector2i(0, orientation);
+    if( checkFieldForFigure(attacked) == HOSTILE_PAWN )
+        delete getPiece(attacked);
+    chessPiece::movePiece(destination);
+    return 0;
+}
 
 int pawn::process(bool marking){    //proceses pawns move, marks fields on which it can step, sets cheks and bindings
     clearMoveBoard();
@@ -631,7 +641,7 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
                 attackField(position);
             else if( checkFieldForFigure(position) != OUTSIDE_THE_CHESSBOARD_FIELD)
                 markFieldAsAttacked(position);
-            /*//el passant
+            //el passant
             position = getPosition();
             position.x--;
             if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1)
@@ -639,7 +649,7 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
             position.x += 2;
             if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1)
                 attackField(position + sf::Vector2i(0,orientation));
-            */
+            
         }
         break;
         case CHECK:{
@@ -661,13 +671,15 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
                 attackField(position + sf::Vector2i(-1, 0));
             if(((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
                 attackField(position + sf::Vector2i(1, 0));
-            /*//el passant
+            //el passant
             position = getPosition(); 
-            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1 && ((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(-1, 0)))
-                attackField(position + sf::Vector2i(-1, 0));
-            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1 && ((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
-                attackField(position + sf::Vector2i(1, 0));
-            */
+            position.x--;
+            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1 && ((king*)kings[ 0 ])->getCheckingPiecePosition() == (position))
+                attackField(position);
+            position.x += 2;
+            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1 && ((king*)kings[ 0 ])->getCheckingPiecePosition() == (position))
+                attackField(position);
+            
         }
         break;
         case DOUBLE_CHECK:

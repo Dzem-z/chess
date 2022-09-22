@@ -126,6 +126,7 @@ class chessPiece {
         virtual int isCheck() const;
         friend int bindField(chessPiece* piece, sf::Vector2i field);
         friend class chessPlayer;
+        ~chessPiece();
 };
 
 class pawn : public chessPiece{
@@ -134,7 +135,7 @@ class pawn : public chessPiece{
         bool elpassant;
     //private:
     public:
-        //int movePiece(sf::Vector2i destination);
+        int movePiece(sf::Vector2i destination);
         pawn(int** global_MoveBoard, int** hostileMoves, int** friendMoves, chessPiece*** global_Chessboard,
             chessPiece** kingsArray, int Xposition, int Yposition, int color, int orientation, sf::Sprite* sprite);
         int whatIs() const;
