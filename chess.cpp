@@ -94,44 +94,44 @@ chessGame::chessGame(chessPlayer* whitePlayer,  //pointer to instance representi
     //globalChessboard initialization
 
     globalChessboard[ 0 ][ 0 ] = new rook(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 0, 0, WHITE);
+                                                WhiteKingsArray, 0, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(0,0))]);
     globalChessboard[ 1 ][ 0 ] = new knight(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 1, 0, WHITE);
+                                                WhiteKingsArray, 1, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(1,0))]);
     globalChessboard[ 2 ][ 0 ] = new bishop(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 2, 0, WHITE);
+                                                WhiteKingsArray, 2, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(2,0))]);
     globalChessboard[ 3 ][ 0 ] = new queen(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 3, 0, WHITE);
+                                                WhiteKingsArray, 3, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(3,0))]);
     globalChessboard[ 4 ][ 0 ] = new king(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 4, 0, WHITE);
+                                                WhiteKingsArray, 4, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(4,0))]);
     globalChessboard[ 5 ][ 0 ] = new bishop(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 5, 0, WHITE);
+                                                WhiteKingsArray, 5, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(5,0))]);
     globalChessboard[ 6 ][ 0 ] = new knight(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 6, 0, WHITE);
+                                                WhiteKingsArray, 6, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(6,0))]);
     globalChessboard[ 7 ][ 0 ] = new rook(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, 7, 0, WHITE);
+                                                WhiteKingsArray, 7, 0, WHITE, piecesSprites[XYtoNumerical(sf::Vector2i(7,0))]);
     for(int i = 0; i < 8; i++)
         globalChessboard[ i ][ 1 ] = new pawn(globalBoard, BlackMoveBoard, WhiteMoveBoard, globalChessboard,
-                                                WhiteKingsArray, i, 1, WHITE, UPSIDE_DOWN);
+                                                WhiteKingsArray, i, 1, WHITE, UPSIDE_DOWN, piecesSprites[XYtoNumerical(sf::Vector2i(i,1))]);
     for(int i = 0; i < 8; i++)
         globalChessboard[ i ][ 6 ] =  new pawn(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, i, 6, BLACK, NORMAL_ORIENTATION);
+                                                BlackKingsArray, i, 6, BLACK, NORMAL_ORIENTATION, piecesSprites[XYtoNumerical(sf::Vector2i(i,6))]);
 
     globalChessboard[ 0 ][ 7 ] = new rook(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 0, 7, BLACK);
+                                                BlackKingsArray, 0, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(0,7))]);
     globalChessboard[ 1 ][ 7 ] = new knight(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 1, 7, BLACK);
+                                                BlackKingsArray, 1, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(1,7))]);
     globalChessboard[ 2 ][ 7 ] = new bishop(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 2, 7, BLACK);
+                                                BlackKingsArray, 2, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(2,7))]);
     globalChessboard[ 3 ][ 7 ] = new queen(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 3, 7, BLACK);
+                                                BlackKingsArray, 3, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(3,7))]);
     globalChessboard[ 4 ][ 7 ] = new king(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 4, 7, BLACK);
+                                                BlackKingsArray, 4, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(4,7))]);
     globalChessboard[ 5 ][ 7 ] = new bishop(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 5, 7, BLACK);
+                                                BlackKingsArray, 5, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(5,7))]);
     globalChessboard[ 6 ][ 7 ] = new knight(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 6, 7, BLACK);
+                                                BlackKingsArray, 6, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(6,7))]);
     globalChessboard[ 7 ][ 7 ] = new rook(globalBoard, WhiteMoveBoard, BlackMoveBoard, globalChessboard,
-                                                BlackKingsArray, 7, 7, BLACK);                
+                                                BlackKingsArray, 7, 7, BLACK, piecesSprites[XYtoNumerical(sf::Vector2i(7,7))]);                
     //players initialization
 
     WhiteKingsArray[ 0 ] = BlackKingsArray[ 1 ] = globalChessboard[ 4 ][ 0 ];
@@ -285,11 +285,10 @@ int chessPlayer::checkFieldForFigure( sf::Vector2i attackedField){   //analyzes 
 }
 
 int chessPlayer::makeMove(sf::Vector2i destinatedField, chessPiece* piece){
-    if( game->piecesSprites[ XYtoNumerical(destinatedField) ] != nullptr )
-            ShowSprite(game->piecesSprites[ XYtoNumerical(destinatedField) ], HIDE);
-        MoveSprite(XYtoNumerical(piece->getPosition()), 
-                    XYtoNumerical(destinatedField), game->piecesSprites);
+        sf::Vector2i oldPos = piece->getPosition();
         piece->movePiece(destinatedField);
+        MoveSprite(XYtoNumerical(oldPos), 
+                    XYtoNumerical(destinatedField), game->piecesSprites);
     return 0;
 }
 
@@ -359,10 +358,11 @@ chessPiece::chessPiece( //constructor
                         chessPiece** kingsArray,   //pointer to kings array
                         int Xposition,                //xposition of the piece
                         int Yposition,                //yposition of the piece
-                        int color                  //colour of the piece     
+                        int color,                  //colour of the piece     
+                        sf::Sprite* Sprite //piece's sprite
                     ) : globalBoard(global_moveBoard), globalChessboard(global_Chessboard), 
                     friendGlobalMoveBoard(friendMoves), hostileGlobalMoveBoard(hostileMoves), 
-                    kings(kingsArray), colour(color){
+                    kings(kingsArray), colour(color), sprite(Sprite){
     pos = sf::Vector2i(Xposition, Yposition);
     moveCount = 0;
     binded = false;
@@ -494,10 +494,21 @@ int chessPiece::clearBindArray(){
     return 0;
 }
 
+sf::Sprite* chessPiece::getSprite(){
+    return sprite;
+}
+
 
 int chessPiece::movePiece(  //applies all action essential for doing move to engine
                             sf::Vector2i destination    //field to which piece is moving
                             ){
+    if(globalBoard[ destination.x ][ destination.y ] > FREE){
+        ShowSprite(globalChessboard[ destination.x ][ destination.y ]->getSprite(), HIDE);
+    }
+
+
+
+
     if( globalBoard[ destination.x ][ destination.y ] > FREE)
         delete globalChessboard[ destination.x ][ destination.y ];
     globalChessboard[ destination.x ][ destination.y ] = globalChessboard[ pos.x ][ pos.y ];
@@ -576,17 +587,22 @@ pawn::pawn( //pawn constructor
             int Xposition,                //xposition of the piece
             int Yposition,                //yposition of the piece
             int color,                  //colour of the piece     
-            int Orientation        //orientation of the board
+            int Orientation,        //orientation of the board
                                         //1 upside down
                                         //-1 normal
+            sf::Sprite* sprite     //pieces sprite       
                     ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
-                                 kingsArray, Xposition, Yposition, color), orientation(Orientation){}
+                                 kingsArray, Xposition, Yposition, color, sprite), orientation(Orientation), elpassant(false){}
 
 
 
 int pawn::whatIs() const{   //returns integer identifier of piece
     return  PAWN;
 }
+
+//int pawn::movePiece(sf::Vector2i destination){
+//    return 0;
+//}
 
 int pawn::process(bool marking){    //proceses pawns move, marks fields on which it can step, sets cheks and bindings
     clearMoveBoard();
@@ -615,6 +631,15 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
                 attackField(position);
             else if( checkFieldForFigure(position) != OUTSIDE_THE_CHESSBOARD_FIELD)
                 markFieldAsAttacked(position);
+            /*//el passant
+            position = getPosition();
+            position.x--;
+            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1)
+                attackField(position + sf::Vector2i(0,orientation));
+            position.x += 2;
+            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1)
+                attackField(position + sf::Vector2i(0,orientation));
+            */
         }
         break;
         case CHECK:{
@@ -636,7 +661,13 @@ int pawn::process(bool marking){    //proceses pawns move, marks fields on which
                 attackField(position + sf::Vector2i(-1, 0));
             if(((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
                 attackField(position + sf::Vector2i(1, 0));
-                
+            /*//el passant
+            position = getPosition(); 
+            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1 && ((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(-1, 0)))
+                attackField(position + sf::Vector2i(-1, 0));
+            if(checkFieldForFigure(position) == HOSTILE_PAWN && getPiece(position)->getMoveCount() == 1 && ((king*)kings[ 0 ])->getCheckingPiecePosition() == (position + sf::Vector2i(1, 0)))
+                attackField(position + sf::Vector2i(1, 0));
+            */
         }
         break;
         case DOUBLE_CHECK:
@@ -654,9 +685,10 @@ rook::rook(         //rook constructor
             chessPiece** kingsArray,   //pointer to kings array
             int Xposition,                //xposition of the piece
             int Yposition,                //yposition of the piece
-            int color                  //colour of the piece   
+            int color,                  //colour of the piece   
+            sf::Sprite* sprite          //piece's sprite
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
-                                 kingsArray, Xposition, Yposition, color),
+                                 kingsArray, Xposition, Yposition, color, sprite),
                                  side(getPosition().x == 0 ? LEFT : getPosition().x == 7 ? RIGHT : SIDE_UNDEFINED){}
 
 int rook::whatIs() const{   //returns integer identifier of piece
@@ -689,9 +721,10 @@ knight::knight(         //knight constructor
             chessPiece** kingsArray,   //pointer to kings array
             int Xposition,                //xposition of the piece
             int Yposition,                //yposition of the piece
-            int color                  //colour of the piece   
+            int color,                  //colour of the piece   
+            sf::Sprite* sprite          //piece's sprite
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
-                                 kingsArray, Xposition, Yposition, color){}
+                                 kingsArray, Xposition, Yposition, color, sprite){}
 
 int knight::whatIs() const{
     return KNIGHT;
@@ -728,9 +761,10 @@ bishop::bishop(         //bishop constructor
             chessPiece** kingsArray,   //pointer to kings array
             int Xposition,                //xposition of the piece
             int Yposition,                //yposition of the piece
-            int color                  //colour of the piece   
+            int color,                  //colour of the piece   
+            sf::Sprite* sprite          //piece's sprite
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
-                                 kingsArray, Xposition, Yposition, color){}
+                                 kingsArray, Xposition, Yposition, color, sprite){}
 
 int bishop::whatIs() const{
     return BISHOP;
@@ -763,9 +797,10 @@ queen::queen(         //queen constructor
             chessPiece** kingsArray,   //pointer to kings array
             int Xposition,                //xposition of the piece
             int Yposition,                //yposition of the piece
-            int color                  //colour of the piece   
+            int color,                  //colour of the piece   
+            sf::Sprite* sprite          //piece's sprite
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
-                                 kingsArray, Xposition, Yposition, color){}
+                                 kingsArray, Xposition, Yposition, color, sprite){}
 
 int queen::whatIs() const{
     return QUEEN;
@@ -804,9 +839,10 @@ king::king(         //king constructor
             chessPiece** kingsArray,   //pointer to kings array
             int Xposition,                //xposition of the piece
             int Yposition,                //yposition of the piece
-            int color                  //colour of the piece   
+            int color,                  //colour of the piece   
+            sf::Sprite* sprite          //piece's sprite
             ) : chessPiece(globalMoveBoard, hostileMoves, friendMoves,  global_Chessboard,
-                                 kingsArray, Xposition, Yposition, color){
+                                 kingsArray, Xposition, Yposition, color, sprite){
     check = 0;
 }
 
@@ -856,6 +892,7 @@ int king::process(bool marking){
                 getPiece(getPosition() + sf::Vector2i(3, 0))->getMoveCount() == 0)
                     possibleCastling(RIGHT);
         case CHECK:
+        case DOUBLE_CHECK:
             position2.x -= 1;
             result = checkFieldForFigure(position2);
             if(result == FREE_FIELD || (result >= HOSTILE_BASE && result < FRIENDLY_BASE))
@@ -888,9 +925,6 @@ int king::process(bool marking){
             result = checkFieldForFigure(position2);
             if(result == FREE_FIELD || (result >= HOSTILE_BASE && result < FRIENDLY_BASE))
                 attackField(position2);
-
-        break;
-        case DOUBLE_CHECK:
 
         break;
     }
