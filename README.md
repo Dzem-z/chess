@@ -5,10 +5,10 @@ This project was started in 2020. The purpose of this was to enhance my coding s
 
 Compiling
 To compile and run this program you need to have installed SFML library.
-You can do this by entering:
-apt-get install libsfml-dev
+You can do this by entering:  
+apt-get install libsfml-dev  
 or download it manualy from https://www.sfml-dev.org/download.php
-then:
-g++ -c main.cpp
-g++ main.o -o chess -lsfml-graphics -lsfml-window -lsfml-system
+then:  
+g++ -c main.cpp  
+g++ main.o -o chess -lsfml-graphics -lsfml-window -lsfml-system  
 ./chess
